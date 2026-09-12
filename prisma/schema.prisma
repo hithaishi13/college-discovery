@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  password      String
+  savedColleges SavedCollege[]
+  createdAt     DateTime       @default(now())
+}
+
+model College {
+  id              String         @id @default(cuid())
+  name            String
+  location        String
+  fees            Int
+  rating          Float
+  overview        String
+  averagePackage  Float
+  highestPackage  Float
+  placementRate   Float
+
+  courses         Course[]
+  reviews         Review[]
+  cutoffs         Cutoff[]
+  savedBy         SavedCollege[]
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([location])
+  @@index([rating])
+  @@index([fees])
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  name        String
+  collegeId   String
+
+  college     College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@index([collegeId])
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  collegeId   String
+  userName    String
+  rating      Float
+  comment     String
+  createdAt   DateTime @default(now())
+
+  college     College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@index([collegeId])
+}
+
+model Cutoff {
+  id          String   @id @default(cuid())
+  collegeId   String
+  exam        String
+  year        Int
+  rank        Int
+
+  college     College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@index([exam])
+  @@index([rank])
+  @@index([collegeId, exam, year])
+}
+
+model SavedCollege {
+  id        String   @id @default(cuid())
+  userId    String
+  collegeId String
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  college   College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, collegeId])
+  @@index([collegeId])
+}
